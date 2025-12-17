@@ -4,6 +4,7 @@ from agents.ae_agent import AEAgent
 from agents.micro_agent import MicroAgent
 from agents.ae_cross_agent import AECrossAgent
 from vtc.time_crystal import TimeCrystal
+from modules.resonance_cores import ResonanceEngine
 
 
 class InfinityLoopOrchestrator:
@@ -15,7 +16,7 @@ class InfinityLoopOrchestrator:
     - Iteration 5: Optimization & Cross-Module Integration
     - Iteration 8: Stabilization & Full System Activation
     
-    The orchestrator coordinates all agents and maintains system coherence.
+    The orchestrator coordinates all agents, resonance cores, and maintains system coherence.
     """
     
     PHASE_3 = "resonance_analysis"
@@ -30,13 +31,15 @@ class InfinityLoopOrchestrator:
         self.is_running = False
         self.cycle_count = 0
         
+        self.resonance_engine = ResonanceEngine(self.time_crystal)
+        
         self.ae_agent = AEAgent("AE-Master", self.time_crystal)
         self.cross_agent = AECrossAgent("Æ-Orchestrator", self.time_crystal)
         
         self.agents["AE-Master"] = self.ae_agent
         self.agents["Æ-Orchestrator"] = self.cross_agent
         
-        self._log("Infinity Loop Orchestrator initialized")
+        self._log("Infinity Loop Orchestrator initialized with Resonance Engine")
     
     def _log(self, message):
         """Log orchestrator activity"""
@@ -78,6 +81,8 @@ class InfinityLoopOrchestrator:
         self.time_crystal.update_infinity_loop(3, self.PHASE_3)
         self._log("Starting Phase 3: Resonance Analysis")
         
+        core_pulses = self.resonance_engine.pulse_all()
+        
         system_analysis = self.ae_agent.analyze_system_state()
         
         agent_resonance = {}
@@ -94,6 +99,7 @@ class InfinityLoopOrchestrator:
             "iteration": 3,
             "system_analysis": system_analysis,
             "agent_resonance": agent_resonance,
+            "core_resonance": core_pulses,
             "timestamp": datetime.now().isoformat()
         }
         
@@ -138,11 +144,14 @@ class InfinityLoopOrchestrator:
         self.time_crystal.update_infinity_loop(8, self.PHASE_8)
         self._log("Starting Phase 8: Stabilization")
         
+        self.resonance_engine.synchronize_all()
+        
         for name, agent in self.agents.items():
             agent.state["status"] = "stable"
             agent._save_state()
         
         final_analysis = self.ae_agent.analyze_system_state()
+        core_status = self.resonance_engine.get_all_status()
         
         self.cycle_count += 1
         
@@ -152,6 +161,7 @@ class InfinityLoopOrchestrator:
             "system_stable": True,
             "cycle_completed": self.cycle_count,
             "final_analysis": final_analysis,
+            "core_status": core_status,
             "active_agents": len(self.agents),
             "timestamp": datetime.now().isoformat()
         }
@@ -212,3 +222,11 @@ class InfinityLoopOrchestrator:
     def get_all_agent_statuses(self):
         """Get status of all registered agents"""
         return {name: agent.get_status() for name, agent in self.agents.items()}
+    
+    def get_resonance_status(self):
+        """Get status of all resonance cores"""
+        return self.resonance_engine.get_all_status()
+    
+    def pulse_resonance(self):
+        """Pulse all resonance cores"""
+        return self.resonance_engine.pulse_all()

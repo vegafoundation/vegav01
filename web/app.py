@@ -22,9 +22,12 @@ def get_orchestrator():
     global orchestrator
     if orchestrator is None:
         orchestrator = InfinityLoopOrchestrator(time_crystal)
-        orchestrator.create_micro_agent("DataProcessor", "data_processing")
-        orchestrator.create_micro_agent("TaskRunner", "task_execution")
+        orchestrator.create_micro_agent("BioLab", "biolab_simulation")
+        orchestrator.create_micro_agent("CreativeHub", "creative_generation")
+        orchestrator.create_micro_agent("FinanceCore", "finance_analysis")
         orchestrator.create_micro_agent("HealthMonitor", "health_monitoring")
+        orchestrator.create_micro_agent("Playbox", "experimental")
+        orchestrator.create_micro_agent("Atlas", "mapping_navigation")
     return orchestrator
 
 
@@ -38,13 +41,20 @@ def add_header(response):
 
 
 @app.route("/")
+def landing():
+    """VEGA.foundation landing page"""
+    return render_template("landing.html")
+
+
+@app.route("/dashboard")
 def dashboard():
-    """Main dashboard view"""
+    """Agent orchestration dashboard"""
     orch = get_orchestrator()
     data = {
         "vtc_data": time_crystal.get_all_data(),
         "orchestrator_status": orch.get_status(),
         "agent_statuses": orch.get_all_agent_statuses(),
+        "resonance_cores": orch.get_resonance_status(),
         "recent_events": time_crystal.get_recent_events(20),
         "infinity_loop": time_crystal.get_infinity_loop_status()
     }
@@ -59,7 +69,29 @@ def api_status():
         "status": "operational",
         "orchestrator": orch.get_status(),
         "agents": orch.get_all_agent_statuses(),
+        "resonance_cores": orch.get_resonance_status(),
         "timestamp": datetime.now().isoformat()
+    })
+
+
+@app.route("/api/resonance")
+def api_resonance():
+    """API endpoint for resonance core status"""
+    orch = get_orchestrator()
+    return jsonify({
+        "cores": orch.get_resonance_status(),
+        "timestamp": datetime.now().isoformat()
+    })
+
+
+@app.route("/api/resonance/pulse", methods=["POST"])
+def api_pulse_resonance():
+    """API endpoint to pulse all resonance cores"""
+    orch = get_orchestrator()
+    result = orch.pulse_resonance()
+    return jsonify({
+        "success": True,
+        "result": result
     })
 
 
