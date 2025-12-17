@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VEGA Dashboard - Agent Orchestration System</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>VEGA Agent Orchestration System</h1>
+            <div class="status-indicator">
+                <span class="status-dot active"></span>
+                <span id="system-status">System Operational</span>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            <section class="panel infinity-loop-panel">
+                <h2>Infinity Loop (3-5-8)</h2>
+                <div class="infinity-status">
+                    <div class="phase-indicator">
+                        <div class="phase" data-phase="3">
+                            <span class="phase-num">3</span>
+                            <span class="phase-name">Resonance</span>
+                        </div>
+                        <div class="phase-arrow">→</div>
+                        <div class="phase" data-phase="5">
+                            <span class="phase-num">5</span>
+                            <span class="phase-name">Optimize</span>
+                        </div>
+                        <div class="phase-arrow">→</div>
+                        <div class="phase" data-phase="8">
+                            <span class="phase-num">8</span>
+                            <span class="phase-name">Stabilize</span>
+                        </div>
+                    </div>
+                    <div class="loop-info">
+                        <p>Current Phase: <strong id="current-phase">{{ data.infinity_loop.phase or 'idle' }}</strong></p>
+                        <p>Iteration: <strong id="current-iteration">{{ data.infinity_loop.current_iteration or 0 }}</strong></p>
+                    </div>
+                    <div class="loop-controls">
+                        <button onclick="runFullCycle()" class="btn btn-primary">Run Full Cycle</button>
+                        <button onclick="runIteration(3)" class="btn btn-secondary">Phase 3</button>
+                        <button onclick="runIteration(5)" class="btn btn-secondary">Phase 5</button>
+                        <button onclick="runIteration(8)" class="btn btn-secondary">Phase 8</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel agents-panel">
+                <h2>Active Agents</h2>
+                <div class="agents-grid" id="agents-container">
+                    {% for name, agent in data.agent_statuses.items() %}
+                    <div class="agent-card" data-agent="{{ name }}">
+                        <div class="agent-header">
+                            <span class="agent-type {{ agent.type | lower | replace('-', '_') }}">{{ agent.type }}</span>
+                            <span class="agent-status {{ agent.state.status }}">{{ agent.state.status }}</span>
+                        </div>
+                        <h3>{{ name }}</h3>
+                        <div class="agent-stats">
+                            <div class="stat">
+                                <span class="stat-value">{{ agent.state.decisions_made or 0 }}</span>
+                                <span class="stat-label">Decisions</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value">{{ agent.state.messages_sent or 0 }}</span>
+                                <span class="stat-label">Messages</span>
+                            </div>
+                        </div>
+                        <button onclick="triggerDecision('{{ name }}')" class="btn btn-small">Trigger Decision</button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="panel vtc-panel">
+                <h2>Time Crystal (VTC)</h2>
+                <div class="vtc-stats">
+                    <div class="vtc-stat">
+                        <span class="vtc-value">{{ data.vtc_data.agents | length if data.vtc_data.agents else 0 }}</span>
+                        <span class="vtc-label">Stored Agents</span>
+                    </div>
+                    <div class="vtc-stat">
+                        <span class="vtc-value">{{ data.vtc_data.events | length if data.vtc_data.events else 0 }}</span>
+                        <span class="vtc-label">Events</span>
+                    </div>
+                    <div class="vtc-stat">
+                        <span class="vtc-value">{{ data.vtc_data.communications | length if data.vtc_data.communications else 0 }}</span>
+                        <span class="vtc-label">Communications</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel events-panel">
+                <h2>Recent Events</h2>
+                <div class="events-list" id="events-container">
+                    {% for event in data.recent_events | reverse %}
+                    <div class="event-item {{ event.type }}">
+                        <span class="event-time">{{ event.timestamp[-8:] if event.timestamp else '' }}</span>
+                        <span class="event-source">{{ event.source }}</span>
+                        <span class="event-type">{{ event.type }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+
+        <section class="panel full-width logs-panel">
+            <h2>System Logs</h2>
+            <div class="logs-container" id="logs-container">
+                <pre id="logs-output">{{ data.vtc_data | tojson(indent=2) }}</pre>
+            </div>
+        </section>
+
+        <footer>
+            <p>VEGA Meta-System v1.0.0 | Infinity Loop Active | Time Crystal Persistent</p>
+        </footer>
+    </div>
+
+    <script>
+        async function fetchStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                updateDashboard(data);
+            } catch (error) {
+                console.error('Error fetching status:', error);
+            }
+        }
+
+        async function runFullCycle() {
+            try {
+                const response = await fetch('/api/infinity-loop/run', { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    showNotification('Full cycle completed!');
+                    fetchStatus();
+                    fetchEvents();
+                }
+            } catch (error) {
+                console.error('Error running cycle:', error);
+                showNotification('Error running cycle', 'error');
+            }
+        }
+
+        async function runIteration(iteration) {
+            try {
+                const response = await fetch(`/api/infinity-loop/iteration/${iteration}`, { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    showNotification(`Phase ${iteration} completed!`);
+                    fetchStatus();
+                    fetchEvents();
+                }
+            } catch (error) {
+                console.error('Error running iteration:', error);
+            }
+        }
+
+        async function triggerDecision(agentName) {
+            try {
+                const response = await fetch(`/api/agent/${agentName}/decision`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ input: 'Dashboard triggered decision' })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showNotification(`${agentName} made a decision`);
+                    fetchStatus();
+                    fetchEvents();
+                }
+            } catch (error) {
+                console.error('Error triggering decision:', error);
+            }
+        }
+
+        async function fetchEvents() {
+            try {
+                const response = await fetch('/api/events?limit=20');
+                const data = await response.json();
+                updateEventsPanel(data.events);
+            } catch (error) {
+                console.error('Error fetching events:', error);
+            }
+        }
+
+        function updateDashboard(data) {
+            document.getElementById('current-phase').textContent = data.orchestrator.phase || 'idle';
+            document.getElementById('current-iteration').textContent = data.orchestrator.current_iteration || 0;
+            
+            document.querySelectorAll('.phase').forEach(el => el.classList.remove('active'));
+            const currentPhase = data.orchestrator.current_iteration;
+            if ([3, 5, 8].includes(currentPhase)) {
+                document.querySelector(`.phase[data-phase="${currentPhase}"]`)?.classList.add('active');
+            }
+        }
+
+        function updateEventsPanel(events) {
+            const container = document.getElementById('events-container');
+            container.innerHTML = events.reverse().map(event => `
+                <div class="event-item ${event.type}">
+                    <span class="event-time">${event.timestamp ? event.timestamp.slice(-8) : ''}</span>
+                    <span class="event-source">${event.source}</span>
+                    <span class="event-type">${event.type}</span>
+                </div>
+            `).join('');
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        setInterval(fetchStatus, 5000);
+        setInterval(fetchEvents, 5000);
+    </script>
+</body>
+</html>

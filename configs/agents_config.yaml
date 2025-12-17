@@ -1,0 +1,89 @@
+vega_agents:
+  version: "1.0.0"
+  system: "VEGA Agent Orchestration System"
+  
+  core_agents:
+    ae_agent:
+      name: "AE-Master"
+      type: "AE-Agent"
+      description: "Core decision-making agent"
+      capabilities:
+        - decision_making
+        - coordination
+        - system_analysis
+      resonance_level: 1.0
+      auto_start: true
+    
+    cross_agent:
+      name: "Æ-Orchestrator"
+      type: "AE-Cross-Agent"
+      description: "Cross-module communication agent"
+      capabilities:
+        - relay
+        - broadcast
+        - module_registration
+      auto_start: true
+
+  micro_agents:
+    defaults:
+      type: "MicroAgent"
+      auto_report: true
+      max_tasks_queue: 10
+    
+    specialties:
+      - name: "DataProcessor"
+        specialty: "data_processing"
+        description: "Handles data transformation and analysis"
+      
+      - name: "TaskRunner"
+        specialty: "task_execution"
+        description: "Executes specific tasks and reports results"
+      
+      - name: "HealthMonitor"
+        specialty: "health_monitoring"
+        description: "Monitors system and agent health"
+      
+      - name: "CreativeAssist"
+        specialty: "creative"
+        description: "Assists with creative tasks and generation"
+
+  infinity_loop:
+    enabled: true
+    auto_start: false
+    cycle_delay_seconds: 1
+    phases:
+      phase_3:
+        name: "Resonance Analysis"
+        iteration: 3
+        actions:
+          - analyze_agent_states
+          - calculate_resonance
+          - identify_bottlenecks
+      
+      phase_5:
+        name: "Optimization"
+        iteration: 5
+        actions:
+          - optimize_communication
+          - balance_workload
+          - enhance_resonance
+      
+      phase_8:
+        name: "Stabilization"
+        iteration: 8
+        actions:
+          - stabilize_agents
+          - finalize_state
+          - persist_to_vtc
+
+  communication:
+    message_queue_size: 100
+    broadcast_enabled: true
+    logging_enabled: true
+    persist_to_vtc: true
+
+  ai_integration:
+    provider: "openai"
+    model: "gpt-5"
+    fallback_mode: "simulation"
+    max_tokens: 512
